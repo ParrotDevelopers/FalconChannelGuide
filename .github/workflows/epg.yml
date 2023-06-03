@@ -1,0 +1,35 @@
+name: EPG
+
+# Controls when the action will run. 
+on:
+  push:
+  schedule:
+    - cron: '10 2 * * *'
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set current date as env variable
+        run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')"
+
+      - name: config
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+      - name: Main
+        run: |
+          pip install -r requirements.txt
+          python3 main.py
+      - name: git add
+        run: |
+          git add -A
+          ls -la
+      - name: commit & push
+        run: |
+          git commit -m "EPG Updated"
+          git push
