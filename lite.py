@@ -3,6 +3,7 @@ import re
 import os
 import sys
 import gzip
+import time
 import unicodedata
 import requests
 import xml.etree.ElementTree as ET
@@ -14,6 +15,8 @@ TS = " +0000"
 days = 5
 days_back = 3
 
+def replace_names(name, *args):
+    return name
 
 def encode(string):
     string = str(unicodedata.normalize('NFKD', string).encode('ascii', 'ignore'), "utf-8")
