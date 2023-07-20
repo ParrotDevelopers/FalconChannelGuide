@@ -89,6 +89,111 @@ class Get_programmes_sms:
         return self.programmes_sms
 
 
+def get_tm_programmes(tm_ids, d, d_b, lng):
+    if d > 10:
+        d = 10
+    if lng == "cz":
+        prfx = "tm-"
+    else:
+        prfx = "mag-"
+    tm_ids_list = tm_ids.split(",")
+    programmes2 = []
+    params={"dsid": "c75536831e9bdc93", "deviceName": "Redmi Note 7", "deviceType": "OTT_ANDROID", "osVersion": "10", "appVersion": "3.7.0", "language": lng.upper()}
+    headers={"Host": lng + "go.magio.tv", "authorization": "Bearer", "User-Agent": "okhttp/3.12.12", "content-type":  "application/json", "Connection": "Keep-Alive"}
+    req = requests.post("https://" + lng + "go.magio.tv/v2/auth/init", params=params, headers=headers, verify=True).json()
+    token = req["token"]["accessToken"]
+    headers2={"Host": lng + "go.magio.tv", "authorization": "Bearer " + token, "User-Agent": "okhttp/3.12.12", "content-type":  "application/json"}
+    req1 = requests.get("https://" + lng + "go.magio.tv/v2/television/channels?list=LIVE&queryScope=LIVE", headers=headers2).json()["items"]
+    channels2 = []
+    ids = ""
+    tvch = {}
+    for y in req1:
+        id = str(y["channel"]["channelId"])
+        if tm_ids_list == [""]:
+            name = y["channel"]["name"]
+            logo = str(y["channel"]["logoUrl"])
+            ids = ids + "," + id
+            tm = str(ids[1:])
+            tvch[name] = prfx + id + "-" + encode(name).replace(" HD", "").lower().replace(" ", "-")
+            channels2.append(({"display-name": [(replace_names(name.replace(" HD", "")), u"cs")], "id": prfx + id + "-" + encode(name).replace(" HD", "").lower().replace(" ", "-"), "icon": [{"src": logo}]}))
+        else:
+            if id in tm_ids_list:
+                name = y["channel"]["name"]
+                logo = str(y["channel"]["logoUrl"])
+                ids = ids + "," + id
+                tm = str(ids[1:])
+                tvch[name] = prfx + id + "-" + encode(name).replace(" HD", "").lower().replace(" ", "-")
+                channels2.append(({"display-name": [(name.replace(" HD", ""), u"cs")], "id": prfx + id + "-" + encode(name).replace(" HD", "").lower().replace(" ", "-"), "icon": [{"src": logo}]}))
+    now = datetime.now()
+    for i in range(d_b*-1, d):
+        next_day = now + timedelta(days = i)
+        back_day = (now + timedelta(days = i)) - timedelta(days = 1)
+        date_to = next_day.strftime("%Y-%m-%d")
+        date_from = back_day.strftime("%Y-%m-%d")
+        date_ = next_day.strftime("%d.%m.%Y")
+        print(date_)
+        req = requests.get("https://" + lng + "go.magio.tv/v2/television/epg?filter=channel.id=in=(" + tm + ");endTime=ge=" + date_from + "T23:00:00.000Z;startTime=le=" + date_to + "T23:59:59.999Z&limit=" + str(len(channels2)) + "&offset=0&lang=" + lng.upper(), headers=headers2).json()["items"]
+        for x in range(0, len(req)):
+            for y in req[x]["programs"]:
+                channel = y["channel"]["name"]
+                start_time = y["startTime"].replace("-", "").replace("T", "").replace(":", "")
+                stop_time = y["endTime"].replace("-", "").replace("T", "").replace(":", "")
+                title = y["program"]["title"]
+                desc = y["program"]["description"]
+                epi = y["program"]["programValue"]["episodeId"]
+                if epi != None:
+                    title = title + " (" + epi + ")"
+                year = y["program"]["programValue"]["creationYear"]
+                try:
+                    subgenre = y["program"]["programCategory"]["subCategories"][0]["desc"]
+                except:
+                    subgenre = ''
+                try:
+                    genre = [(y["program"]["programCategory"]["desc"], u''), (subgenre, u'')]
+                except:
+                    genre = None
+                try:
+                    icon = y["program"]["images"][0]
+                except:
+                    icon = None
+                try:
+                    directors = []
+                    for dr in y["program"]["programRole"]["directors"]:
+                        directors.append(dr["fullName"])
+                except:
+                    directors = []
+                try:
+                    actors = []
+                    for ac in y["program"]["programRole"]["actors"]:
+                        actors.append(ac["fullName"])
+                except:
+                    actors = []
+                try:
+                    programm = {'channel': tvch[channel], 'start': start_time + TS, 'stop': stop_time + TS, 'title': [(title, u'')], 'desc': [(desc, u'')]}
+                    if year != None:
+                        programm['date'] = year
+                    if genre != None:
+                        programm['category'] = genre
+                    if icon != None:
+                        programm['icon'] = [{"src": icon}]
+                    if directors != []:
+                        programm['credits'] = {"director": directors}
+                        if actors != []:
+                            programm['credits'] = {"director": directors, "actor": actors}
+                    if actors != []:
+                        programm['credits'] = {"actor": actors}
+                        if directors != []:
+                            programm['credits'] = {"actor": actors, "director": directors}
+                    if programm not in programmes2:
+                        programmes2.append(programm)
+                except:
+                    pass
+        sys.stdout.write('\x1b[1A')
+        print(date_ + "  OK")
+    print("\n")
+    return channels2, programmes2
+
+
 class Others:
     def __init__(self):
         self.channels = []
@@ -197,11 +302,20 @@ def EPG_Generator(channelList):
     programmes_sms = programmes_.data_programmes(ch)
     programmes.extend(programmes_sms)
     
+    print("Magio Go kanály")
+    print("Stahuji data...")
+    mag_id = "4561,4562,4563,4564,4565"
+    channels_mag, programmes_mag = get_tm_programmes(mag_id, days, days_back, "sk")
+    channels.extend(channels_mag)
+    programmes.extend(programmes_mag)
+
+
+
 
     print("můjTVprogram.cz kanály")
     print("Stahuji data...")
     #mujtv_id = "723,233,234,110,40,41,49,50,39,37,38,174,52,54,53,393,216,46,408,892,1040"
-    mujtv_id = "723,1040"
+    mujtv_id = "723"
     channels_mujtv, programmes_mujtv = get_muj_tv_programmes(mujtv_id, days, days_back)
     channels.extend(channels_mujtv)
     programmes.extend(programmes_mujtv)
