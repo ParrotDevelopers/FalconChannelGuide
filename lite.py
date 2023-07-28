@@ -249,8 +249,8 @@ class Others:
                 start_time = datetime.strptime(start, "%Y%m%d%H%M%S")
                 stop_time = datetime.strptime(stop, "%Y%m%d%H%M%S")
                 
-                start_time = start_time + timedelta(hours=1)
-                stop_time = stop_time + timedelta(hours=1)
+                start_time = start_time
+                stop_time = stop_time 
 
                 start = start_time.strftime("%Y%m%d%H%M%S") + TS
                 stop = stop_time.strftime("%Y%m%d%H%M%S") + TS
