@@ -7,13 +7,16 @@ import time
 import unicodedata
 import requests
 import xml.etree.ElementTree as ET
+from bs4  import BeautifulSoup
 from datetime import datetime, timedelta
 import io
 
 TS = " +0000"
 
 days = 5
+#days = 1
 days_back = 3
+#days_back = 0
 
 
 def replace_names(name, *args):
@@ -65,7 +68,10 @@ class Get_programmes_sms:
                 headers = {"user-agent": "SMSTVP/1.7.3 (242;cs_CZ) ID/ef284441-c1cd-4f9e-8e30-f5d8b1ac170c HW/Redmi Note 7 Android/10 (QKQ1.190910.002)"}
                 print(date_)
                 html = requests.get("http://programandroid.365dni.cz/android/v6-program.php?datum=" + date + "&id_tv=" + chl, headers = headers).text
-                root = ET.fromstring(html, ET.XMLParser(encoding='utf-8'))
+                dom = BeautifulSoup(html, features="lxml")
+
+                #open("test.html", "w", encoding="utf-8").write(dom.prettify())
+                root = ET.fromstring(dom.prettify(), ET.XMLParser(encoding='utf-8'))
                 root[:] = sorted(root, key=lambda child: (child.tag,child.get("o")))
                 for i in root.iter("p"):
                     n = i.find("n").text
