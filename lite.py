@@ -33,7 +33,7 @@ class Get_channels_sms:
 
     def own_channels(self, cchc):
         try:
-            root = ET.fromstring(self.html)
+            root = ET.fromstring(self.html, ET.XMLParser(encoding='utf-8'))
             #cchc = cchc.split(",") # Lists are better for this
             for i in root.iter("a"):
                 if True:
@@ -65,7 +65,7 @@ class Get_programmes_sms:
                 headers = {"user-agent": "SMSTVP/1.7.3 (242;cs_CZ) ID/ef284441-c1cd-4f9e-8e30-f5d8b1ac170c HW/Redmi Note 7 Android/10 (QKQ1.190910.002)"}
                 print(date_)
                 html = requests.get("http://programandroid.365dni.cz/android/v6-program.php?datum=" + date + "&id_tv=" + chl, headers = headers).text
-                root = ET.fromstring(html)
+                root = ET.fromstring(html, ET.XMLParser(encoding='utf-8'))
                 root[:] = sorted(root, key=lambda child: (child.tag,child.get("o")))
                 for i in root.iter("p"):
                     n = i.find("n").text
@@ -280,7 +280,7 @@ def get_muj_tv_programmes(ids, d, d_b):
         print(date_)
         for y in ids:
             html = requests.post("https://services.mujtvprogram.cz/tvprogram2services/services/tvprogrammelist_mobile.php", data = {"channel_cid": y, "day": str(x)}).content
-            root = ET.fromstring(html)
+            root = ET.fromstring(html, ET.XMLParser(encoding='utf-8'))
             for i in root.iter("programme"):
                 programmes.append({"channel": ids_[y],  "start": time.strftime('%Y%m%d%H%M%S', time.localtime(int(i.find("startDateTimeInSec").text))) + TS, "stop": time.strftime('%Y%m%d%H%M%S', time.localtime(int(i.find("endDateTimeInSec").text))) + TS, "title": [(i.find("name").text, "")], "desc": [(i.find("shortDescription").text, "")]})
         sys.stdout.write('\x1b[1A')
