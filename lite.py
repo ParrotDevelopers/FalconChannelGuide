@@ -309,13 +309,14 @@ def EPG_Generator(channelList):
     programmes_sms = programmes_.data_programmes(ch)
     programmes.extend(programmes_sms)
     
+    """
     print("Magio Go kanály")
     print("Stahuji data...")
     mag_id = "4560,4561,4562,4563,4564,4565"
     channels_mag, programmes_mag = get_tm_programmes(mag_id, days, days_back, "sk")
     channels.extend(channels_mag)
     programmes.extend(programmes_mag)
-
+    """
 
 
 
