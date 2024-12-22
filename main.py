@@ -1,4 +1,11 @@
 import requests
-from lite import EPG_Generator
+import os
 
-EPG_Generator("")
+filename = "epg.xml.gz"
+
+if os.path.exists(filename):
+    os.remove(filename)
+
+response = requests.get(os.getenv("EPG_URL"))
+
+open(filename, "wb").write(response.content)
