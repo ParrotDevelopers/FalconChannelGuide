@@ -2,7 +2,6 @@ import requests
 import os
 
 filename = "epg.xml.gz"
-
 if os.path.exists(filename):
     os.remove(filename)
 
